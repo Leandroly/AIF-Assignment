@@ -58,6 +58,33 @@ def simulate(k=200, D=np.array([1, 0, 0, 0, 0, 0]), delta=0, warmup=False):
 
     return s_onehot, o_onehot
 
+def viterbi_decode(o, A, B):
+    """Decodes the most likely state sequence given an observation sequence and HMM parameters.
+
+    Args:
+    - o: Observation sequence
+    - A: emission matrix
+    - B: Transition matrix
+
+    """
+    n_obs = len(o)
+    n_states = B.shape[0]
+    dp = np.zeros((n_obs, n_states))
+    prev = np.zeros((n_obs, n_states), dtype=int)
+
+    dp[0] = np.log(A[:, o[0]])
+    for t in range(1, n_obs):
+        for i in range(n_states):
+            temp = dp[t - 1] + np.log(B[:, i]) + np.log(A[i, o[t]])
+            dp[t, i] = np.max(temp)
+            prev[t, i] = np.argmax(temp)
+    path = np.zeros(n_obs, dtype=int)
+    path[-1] = np.argmax(dp[-1])
+    for t in range(n_obs - 2, -1, -1):
+        path[t] = prev[t + 1, path[t + 1]]
+
+    return path + 1
+
 # Example usage
 k = 100
 D = np.array([1, 0, 0, 0, 0, 0])
